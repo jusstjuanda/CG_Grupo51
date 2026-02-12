@@ -1,24 +1,35 @@
-using NUnit.Framework;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
 
 public class ControllerGame : MonoBehaviour
 {
-    List<MultipleQuestion> multipleQuestions = new List<MultipleQuestion>();
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public TextAsset preguntasTXT;
+
+    public TextMeshProUGUI questionText;
+    public TextMeshProUGUI difficultyText;
+
+    public Button boton1;
+    public Button boton2;
+    public Button boton3;
+    public Button boton4;
+
     void Start()
     {
-        LoadMultipleQuestions();
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
+        string texto = preguntasTXT.text;
 
-    }
+        string[] lineas = texto.Split('\n');
 
-    public void LoadMultipleQuestions()
-    {
+        string linea = lineas[0];
 
+        string[] datos = linea.Split('-');
+
+        questionText.text = datos[0];
+        boton1.GetComponentInChildren<TextMeshProUGUI>().text = datos[1];
+        boton2.GetComponentInChildren<TextMeshProUGUI>().text = datos[2];
+        boton3.GetComponentInChildren<TextMeshProUGUI>().text = datos[3];
+        boton4.GetComponentInChildren<TextMeshProUGUI>().text = datos[4];
+        difficultyText.text = "Dificultad: " + datos[7];
     }
 }
