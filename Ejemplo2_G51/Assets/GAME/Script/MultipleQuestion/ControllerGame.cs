@@ -18,59 +18,46 @@ public class ControllerGame : MonoBehaviour
     TrueFalseQuestion preguntaTFActual;
     OpenQuestion preguntaOpenActual;
 
-    [Header("Textos Preguntas")]
-    public TMP_Text textPreguntaMultiple;
-    public TMP_Text textPreguntaTF;
-    public TMP_Text textPreguntaOpen;
+    [Header("Textos Pregunta")]
+    public TMP_Text textPregunta;
 
     [Header("Paneles")]
     public GameObject panelOpen;
     public GameObject panelMultiple;
     public GameObject panelTrueFalse;
-    public GameObject panelResult;
-
-    [Header("Textos Generales")]
-    public TextMeshProUGUI questionText;
-    public TextMeshProUGUI difficultyText;
+    public GameObject panelQuestion;
 
     [Header("Botón Siguiente")]
     public Button nextQuestionButton;
 
     [Header("Botones Multiple")]
-    public GameObject buttonOP1;
-    public GameObject buttonOP2;
-    public GameObject buttonOP3;
-    public GameObject buttonOP4;
+    public TMP_Text buttonOP1;
+    public TMP_Text buttonOP2;
+    public TMP_Text buttonOP3;
+    public TMP_Text buttonOP4;
 
     [Header("Dificultad")]
-    public TMP_Text textDificultadMultiple;
+    public TMP_Text textDificultad;
 
     [Header("True / False")]
-    public TMP_Text textDificultadTF;
-    public GameObject buttonVerdadero;
-    public GameObject buttonFalso;
+    public TMP_Text buttonVerdadero;
+    public TMP_Text buttonFalso;
 
     [Header("Open Question")]
-    public TMP_Text textDificultadOpen;
     public TMP_InputField inputRespuestaOpen;
 
     [Header("Resultado")]
     public GameObject panelResultado;
     public TMP_Text textResultado;
     public TMP_Text textVersiculo;
-
-
+    public string dificultadActual = "facil";
     void Start()
     {
         CargarMultiple();
         CargarTrueFalse();
         CargarOpen();
         ElegirPreguntaAleatoria();
-        nextQuestionButton.gameObject.SetActive(false);
-
-        Debug.Log("Multiple: " + multipleList.Count);
-        Debug.Log("TrueFalse: " + trueFalseList.Count);
-        Debug.Log("Open: " + openList.Count);
+        nextQuestionButton.gameObject.SetActive(false); 
     }
 
 
@@ -79,13 +66,24 @@ public class ControllerGame : MonoBehaviour
         panelOpen.SetActive(false);
         panelMultiple.SetActive(false);
         panelTrueFalse.SetActive(false);
+        panelQuestion.SetActive(false);
 
         if (tipo == "Open")
+        {
             panelOpen.SetActive(true);
+            panelQuestion.SetActive(true);
+        }   
         else if (tipo == "Multiple")
+        {
             panelMultiple.SetActive(true);
+            panelQuestion.SetActive(true);
+        }
         else if (tipo == "TrueFalse")
+        {
             panelTrueFalse.SetActive(true);
+            panelQuestion.SetActive(true);
+        }
+            
     }
 
     void CargarMultiple()
@@ -160,8 +158,28 @@ public class ControllerGame : MonoBehaviour
         }
     }
 
+    bool QuedanPreguntasFaciles()
+    {
+        foreach (var p in multipleList)
+            if (p.Dificultty.ToLower() == "facil") return true;
+
+        foreach (var p in trueFalseList)
+            if (p.difficulty.ToLower() == "facil") return true;
+
+        foreach (var p in openList)
+            if (p.difficulty.ToLower() == "facil") return true;
+
+        return false;
+    }
+
     void ElegirPreguntaAleatoria()
     {
+        if (dificultadActual=="facil" && !QuedanPreguntasFaciles())
+        {
+            dificultadActual = "dificl";
+            Debug.Log("⚠️ A partir de ahora se mostrarán preguntas DIFÍCILES");
+        }
+
         int totalPreguntas = multipleList.Count + trueFalseList.Count + openList.Count;
 
         int randomIndex = Random.Range(0, totalPreguntas);
@@ -169,21 +187,23 @@ public class ControllerGame : MonoBehaviour
         panelMultiple.SetActive(false);
         panelTrueFalse.SetActive(false);
         panelOpen.SetActive(false);
+        panelQuestion.SetActive(false);
 
         if (randomIndex < multipleList.Count)
         {
             preguntaMultipleActual = multipleList[randomIndex];
 
             panelMultiple.SetActive(true);
+            panelQuestion.SetActive(true);
 
-            textPreguntaMultiple.text = preguntaMultipleActual.Question;
+            textPregunta.text = preguntaMultipleActual.Question;
 
-            buttonOP1.GetComponentInChildren<TMP_Text>().text = preguntaMultipleActual.Option1;
-            buttonOP2.GetComponentInChildren<TMP_Text>().text = preguntaMultipleActual.Option2;
-            buttonOP3.GetComponentInChildren<TMP_Text>().text = preguntaMultipleActual.Option3;
-            buttonOP4.GetComponentInChildren<TMP_Text>().text = preguntaMultipleActual.Option4;
+            buttonOP1.text = preguntaMultipleActual.Option1;
+            buttonOP2.text = preguntaMultipleActual.Option2;
+            buttonOP3.text = preguntaMultipleActual.Option3;
+            buttonOP4.text = preguntaMultipleActual.Option4;
 
-            textDificultadMultiple.text = "Dificultad: " + preguntaMultipleActual.Dificultty;
+            textDificultad.text = "Dificultad: " + preguntaMultipleActual.Dificultty;
 
 
         }
@@ -194,12 +214,13 @@ public class ControllerGame : MonoBehaviour
             preguntaTFActual = trueFalseList[index];
 
             panelTrueFalse.SetActive(true);
+            panelQuestion.SetActive(true);
 
-            textPreguntaTF.text = preguntaTFActual.question;
-            textDificultadTF.text = "Dificultad: " + preguntaTFActual.difficulty;
+            textPregunta.text = preguntaTFActual.question;
+            textDificultad.text = "Dificultad: " + preguntaTFActual.difficulty;
 
-            buttonVerdadero.GetComponentInChildren<TMP_Text>().text = "Verdadero";
-            buttonFalso.GetComponentInChildren<TMP_Text>().text = "Falso";
+            buttonVerdadero.text = "Verdadero";
+            buttonFalso.text = "Falso";
         }
 
         else
@@ -208,11 +229,12 @@ public class ControllerGame : MonoBehaviour
             preguntaOpenActual = openList[index];
 
             panelOpen.SetActive(true);
+            panelQuestion.SetActive(true);
 
-            textPreguntaOpen.text = preguntaOpenActual.question;
-            textDificultadOpen.text = "Dificultad: " + preguntaOpenActual.difficulty;
+            textPregunta.text = preguntaOpenActual.question;
+            textDificultad.text = "Dificultad: " + preguntaOpenActual.difficulty;
 
-            inputRespuestaOpen.text = ""; // limpiar campo
+            inputRespuestaOpen.text = "";
         }
 
     }
@@ -230,15 +252,16 @@ public class ControllerGame : MonoBehaviour
         else if (numeroOpcion == 4)
             respuestaJugador = preguntaMultipleActual.Option4;
 
+        panelQuestion.SetActive(false);
         panelResultado.SetActive(true);
 
-        if (respuestaJugador == preguntaMultipleActual.Answer)
+        if (respuestaJugador.Equals(preguntaMultipleActual.Answer))
         {
             textResultado.text = "Correcto";
         }
         else
         {
-            textResultado.text = "Incorrecto";
+            textResultado.text = "Incorrecto \nLa respuesta correcta era: " +preguntaMultipleActual.Answer;
         }
 
         textVersiculo.text = "Justificación: " + preguntaMultipleActual.Versiculo;
@@ -250,6 +273,7 @@ public class ControllerGame : MonoBehaviour
 
     public void ValidarTrueFalse(bool respuestaJugador)
     {
+        panelQuestion.SetActive(false);
         panelResultado.SetActive(true);
 
         bool respuestaCorrecta = preguntaTFActual.answer.ToLower() == "verdadero";
@@ -271,19 +295,19 @@ public class ControllerGame : MonoBehaviour
     {
         if (preguntaOpenActual == null)
             return;
-
+        panelQuestion.SetActive(false);
         panelResultado.SetActive(true);
 
-        string respuestaJugador = inputRespuestaOpen.text.Trim().ToLower();
-        string respuestaCorrecta = preguntaOpenActual.answer.Trim().ToLower();
+        string respuestaJugador = inputRespuestaOpen.text;
+        string respuestaCorrecta = preguntaOpenActual.answer;
 
-        if (respuestaJugador == respuestaCorrecta)
+        if (respuestaJugador.Equals(respuestaCorrecta))
         {
             textResultado.text = "Correcto";
         }
         else
         {
-            textResultado.text = "Incorrecto";
+            textResultado.text = "Incorrecto \nLa respuesta Correcta era: " + respuestaCorrecta ;
         }
 
         textVersiculo.text = "Justificación: " + preguntaOpenActual.versiculo;
@@ -296,6 +320,7 @@ public class ControllerGame : MonoBehaviour
         panelMultiple.SetActive(false);
         panelTrueFalse.SetActive(false);
         panelOpen.SetActive(false);
+        panelQuestion.SetActive(false);
 
   
         nextQuestionButton.gameObject.SetActive(false);
