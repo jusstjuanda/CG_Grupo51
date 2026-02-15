@@ -26,6 +26,10 @@ public class ControllerGame : MonoBehaviour
     public GameObject panelMultiple;
     public GameObject panelTrueFalse;
     public GameObject panelQuestion;
+    public GameObject panelIncorrecto;
+    public GameObject panelCorrecto;
+    public GameObject panelDificil;
+    public GameObject panelTerminado;
 
     [Header("Botón Siguiente")]
     public Button nextQuestionButton;
@@ -50,14 +54,28 @@ public class ControllerGame : MonoBehaviour
     public GameObject panelResultado;
     public TMP_Text textResultado;
     public TMP_Text textVersiculo;
-    public string dificultadActual = "facil";
+    public string dificultadActual = "Facil";
+
+    [Header("Puntos")]
+    public int puntos = 0;
+    public TMP_Text textpuntos;
+    public TMP_Text textfinal;
+
+    [Header("Audios")]
+    public AudioSource WahWahWah;
+    public AudioSource Yei;
+    public AudioSource MusicaFacil;
+    public AudioSource MusicaDificil;
+    public AudioSource outroCoscu;
+    public AudioSource goku;
     void Start()
     {
         CargarMultiple();
         CargarTrueFalse();
         CargarOpen();
         ElegirPreguntaAleatoria();
-        nextQuestionButton.gameObject.SetActive(false); 
+        nextQuestionButton.gameObject.SetActive(false);
+        MusicaFacil.Play();
     }
 
 
@@ -158,60 +176,148 @@ public class ControllerGame : MonoBehaviour
         }
     }
 
-    bool QuedanPreguntasFaciles()
+    bool QuedanPreguntasPorDificultad(string dificultad)
     {
+        dificultad = dificultad.Trim().ToLower();
+
         foreach (var p in multipleList)
-            if (p.Dificultty.ToLower() == "facil") return true;
+            if (p.Dificultty.Trim().ToLower().Equals(dificultad))
+                return true;
 
         foreach (var p in trueFalseList)
-            if (p.difficulty.ToLower() == "facil") return true;
+            if (p.difficulty.Trim().ToLower().Equals(dificultad))
+                return true;
 
         foreach (var p in openList)
-            if (p.difficulty.ToLower() == "facil") return true;
+            if (p.difficulty.Trim().ToLower().Equals(dificultad))
+                return true;
 
         return false;
     }
 
+
     void ElegirPreguntaAleatoria()
     {
-        if (dificultadActual=="facil" && !QuedanPreguntasFaciles())
+        if (!QuedanPreguntasPorDificultad(dificultadActual))
         {
-            dificultadActual = "dificl";
-            Debug.Log("⚠️ A partir de ahora se mostrarán preguntas DIFÍCILES");
+            if (dificultadActual.Trim().ToLower().Equals("facil"))
+            {
+                MusicaFacil.Stop();
+                MusicaDificil.Play();
+                dificultadActual = "dificil";
+                panelDificil.SetActive(true);
+                goku.Play();
+
+                if (!QuedanPreguntasPorDificultad(dificultadActual))
+                {
+                    panelTerminado.SetActive(true);
+                    MusicaDificil.Stop();
+                    outroCoscu.Play();
+                    if (puntos > 1250)
+                    {
+                        textfinal.text = "Has logrado completar el juego con un rendimiento bastante ejemplar pero la princesa esta en otro castillo";
+                    }
+                    else if(puntos >750)
+                    {
+                        textfinal.text = "Has logrado completar el juego con un rendimiento regular, pero bueno peor seria no haberlo completado, algo es algo bro tranquilo";
+                    }
+                    else if (puntos > 250)
+                    {
+                        textfinal.text = "Has 'logrado' terminar el juego por decirlo menos porque has sacado una puntuacion sinceramente muy mala";
+                    }
+                    else
+                    {
+                        textfinal.text = "Decir que has completado el juego es mentira, has acabado el juego pero de intentarlo sinceramente nada, asi que mucho menos acabarlo, te diria que lo puedes hacer mejor pero no creo";
+                    }
+                    return;
+                }
+            }
+            else
+            {
+                panelTerminado.SetActive(true);
+                    MusicaDificil.Stop();
+                    outroCoscu.Play();
+                    if (puntos > 1250)
+                    {
+                        textfinal.text = "Has logrado completar el juego con un rendimiento bastante ejemplar pero la princesa esta en otro castillo";
+                    }
+                    else if(puntos >750)
+                    {
+                        textfinal.text = "Has logrado completar el juego con un rendimiento regular, pero bueno peor seria no haberlo completado, algo es algo bro tranquilo";
+                    }
+                    else if (puntos > 250)
+                    {
+                        textfinal.text = "Has 'logrado' terminar el juego por decirlo menos porque has sacado una puntuacion sinceramente muy mala";
+                    }
+                    else
+                    {
+                        textfinal.text = "Decir que has completado el juego es mentira, has acabado el juego pero de intentarlo sinceramente nada, asi que mucho menos acabarlo, te diria que lo puedes hacer mejor pero no creo";
+                    }
+                return;
+            }
         }
 
-        int totalPreguntas = multipleList.Count + trueFalseList.Count + openList.Count;
+        string dificultadNormalizada = dificultadActual.Trim().ToLower();
 
-        int randomIndex = Random.Range(0, totalPreguntas);
+        List<string> tiposDisponibles = new List<string>();
+
+        if (multipleList.Exists(p => p.Dificultty.Trim().ToLower().Equals(dificultadNormalizada)))
+            tiposDisponibles.Add("Multiple");
+
+        if (trueFalseList.Exists(p => p.difficulty.Trim().ToLower().Equals(dificultadNormalizada)))
+            tiposDisponibles.Add("TrueFalse");
+
+        if (openList.Exists(p => p.difficulty.Trim().ToLower().Equals(dificultadNormalizada)))
+            tiposDisponibles.Add("Open");
+
+        if (tiposDisponibles.Count == 0)
+        {
+            Debug.Log("oh no...");
+            return;
+        }
+
+        string tipoElegido = tiposDisponibles[Random.Range(0, tiposDisponibles.Count)];
 
         panelMultiple.SetActive(false);
         panelTrueFalse.SetActive(false);
         panelOpen.SetActive(false);
         panelQuestion.SetActive(false);
 
-        if (randomIndex < multipleList.Count)
+        if (tipoElegido.Equals("Multiple"))
         {
-            preguntaMultipleActual = multipleList[randomIndex];
+            List<MultipleQuestion> disponibles =
+                multipleList.FindAll(p => p.Dificultty.Trim().ToLower().Equals(dificultadNormalizada));
+
+            if (disponibles.Count == 0) return;
+
+            preguntaMultipleActual =
+                disponibles[Random.Range(0, disponibles.Count)];
+
+            multipleList.Remove(preguntaMultipleActual);
 
             panelMultiple.SetActive(true);
             panelQuestion.SetActive(true);
 
             textPregunta.text = preguntaMultipleActual.Question;
-
             buttonOP1.text = preguntaMultipleActual.Option1;
             buttonOP2.text = preguntaMultipleActual.Option2;
             buttonOP3.text = preguntaMultipleActual.Option3;
             buttonOP4.text = preguntaMultipleActual.Option4;
 
             textDificultad.text = "Dificultad: " + preguntaMultipleActual.Dificultty;
-
-
         }
-        else if (randomIndex < multipleList.Count + trueFalseList.Count)
-        {
-            int index = randomIndex - multipleList.Count;
 
-            preguntaTFActual = trueFalseList[index];
+        else if (tipoElegido.Equals("TrueFalse"))
+        {
+            List<TrueFalseQuestion> disponibles =
+                trueFalseList.FindAll(p => p.difficulty.Trim().ToLower().Equals(dificultadNormalizada));
+
+            if (disponibles.Count == 0) return;
+
+            preguntaTFActual =
+                disponibles[Random.Range(0, disponibles.Count)];
+
+            trueFalseList.Remove(preguntaTFActual);
 
             panelTrueFalse.SetActive(true);
             panelQuestion.SetActive(true);
@@ -225,8 +331,15 @@ public class ControllerGame : MonoBehaviour
 
         else
         {
-            int index = randomIndex - multipleList.Count - trueFalseList.Count;
-            preguntaOpenActual = openList[index];
+            List<OpenQuestion> disponibles =
+                openList.FindAll(p => p.difficulty.Trim().ToLower().Equals(dificultadNormalizada));
+
+            if (disponibles.Count == 0) return;
+
+            preguntaOpenActual =
+                disponibles[Random.Range(0, disponibles.Count)];
+
+            openList.Remove(preguntaOpenActual);
 
             panelOpen.SetActive(true);
             panelQuestion.SetActive(true);
@@ -236,8 +349,24 @@ public class ControllerGame : MonoBehaviour
 
             inputRespuestaOpen.text = "";
         }
-
     }
+    public void cerrarIncorrecto()
+    {
+        panelIncorrecto.SetActive(false);
+        WahWahWah.Stop();
+    }
+    public void cerrarCorrecto()
+    {
+        panelCorrecto.SetActive(false);
+        Yei.Stop();
+    }
+    public void cerrarDificil()
+    {
+        panelDificil.SetActive(false);
+        goku.Stop();
+    }
+
+
 
     public void ValidarMultiple(int numeroOpcion)
     {
@@ -258,10 +387,18 @@ public class ControllerGame : MonoBehaviour
         if (respuestaJugador.Equals(preguntaMultipleActual.Answer))
         {
             textResultado.text = "Correcto";
+            panelCorrecto.SetActive(true);
+            Yei.Play();
+            puntos = puntos + 50;
+            textpuntos.text = $"{puntos}";
         }
         else
         {
-            textResultado.text = "Incorrecto \nLa respuesta correcta era: " +preguntaMultipleActual.Answer;
+            textResultado.text = "La respuesta correcta era: " +preguntaMultipleActual.Answer;
+            panelIncorrecto.SetActive(true);
+            WahWahWah.Play();
+            puntos = puntos - 50;
+            textpuntos.text = $"{puntos}";
         }
 
         textVersiculo.text = "Justificación: " + preguntaMultipleActual.Versiculo;
@@ -276,15 +413,25 @@ public class ControllerGame : MonoBehaviour
         panelQuestion.SetActive(false);
         panelResultado.SetActive(true);
 
-        bool respuestaCorrecta = preguntaTFActual.answer.ToLower() == "verdadero";
+        bool respuestaCorrecta = preguntaTFActual.answer.ToLower().Equals("verdadero");
 
         if (respuestaJugador == respuestaCorrecta)
         {
             textResultado.text = "Correcto";
+            panelCorrecto.SetActive(true);
+            Yei.Play();
+            puntos = puntos + 50;
+            textpuntos.text = $"{puntos}";
+
         }
         else
         {
-            textResultado.text = "Incorrecto";
+            textResultado.text = "la respuesta correcta era: "+preguntaTFActual.answer;
+            panelIncorrecto.SetActive(true);
+            WahWahWah.Play();
+            puntos = puntos - 50;
+            textpuntos.text = $"{puntos}";
+
         }
 
         textVersiculo.text = "Justificación: " + preguntaTFActual.versiculo;
@@ -304,10 +451,18 @@ public class ControllerGame : MonoBehaviour
         if (respuestaJugador.Equals(respuestaCorrecta))
         {
             textResultado.text = "Correcto";
+            panelCorrecto.SetActive(true);
+            Yei.Play();
+            puntos = puntos + 50;
+            textpuntos.text = $"{puntos}";
         }
         else
         {
-            textResultado.text = "Incorrecto \nLa respuesta Correcta era: " + respuestaCorrecta ;
+            textResultado.text = "La respuesta Correcta era: " + respuestaCorrecta ;
+            panelIncorrecto.SetActive(true);
+            WahWahWah.Play();
+            puntos = puntos - 50;
+            textpuntos.text = $"{puntos}";
         }
 
         textVersiculo.text = "Justificación: " + preguntaOpenActual.versiculo;
